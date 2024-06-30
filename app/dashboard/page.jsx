@@ -7,6 +7,14 @@ import "react-toastify/dist/ReactToastify.css";
 import { useRouter } from "next/navigation";
 
 import { auth } from "@/firebase/config";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 function Dashboard() {
   const [user, loading, error] = useAuthState(auth);
@@ -24,7 +32,6 @@ function Dashboard() {
               fontSize: "10px",
             },
           });
-          setToastShown(true);
         }, 100);
       }
     }
@@ -43,8 +50,11 @@ function Dashboard() {
   }
 
   return (
-    <div>
-      Dashboard
+    <div className="flex p-6">
+      <h2 className="text-[24px]">
+        Welcome to Perfect Fit, where style meets tech!
+      </h2>
+      <div></div>
       <ToastContainer />
     </div>
   );
