@@ -1,11 +1,7 @@
 import { NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
-import { ref, uploadBytes } from "firebase/storage";
+import { ref, getDownloadURL, uploadBytesResumable } from "firebase/storage";
 import { storage } from "@/firebase/config";
-
-export const GET = () => {
-  return NextResponse.json({ hello: "mario" });
-};
 
 // uploading the file to firebase storage
 export const POST = async (req, res) => {
@@ -23,18 +19,24 @@ export const POST = async (req, res) => {
     console.log(filename);
 
     const storageRef = ref(storage, `uploads/${filename}`);
-    // setting the type of the file
-    let data = {
+
+    const uploadTask = uploadBytesResumable(storageRef, buffer, {
       contentType: file.type,
-    };
-    const { metadata } = await uploadBytes(storageRef, buffer, data);
-    const { fullPath } = metadata;
-    if (!fullPath) {
-      return res.status(403).json({
-        error: "There was some error while uploading the file.",
-      });
-    }
-    return NextResponse.json({ Message: "Success", status: 201 });
+    });
+
+    // Wait for the upload to complete
+    await uploadTask;
+
+    // Get the download URL
+    const downloadURL = await getDownloadURL(storageRef);
+
+    return NextResponse.json(
+      {
+        message: "Success",
+        downloadURL,
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.log("Error occured ", error);
     return NextResponse.json({ Message: "Failed", status: 500 });
