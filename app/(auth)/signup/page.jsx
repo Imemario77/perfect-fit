@@ -25,6 +25,8 @@ function SignUp() {
 
   useEffect(() => {
     if (!loading && user) {
+      console.log("google: ", user);
+
       router.push("/dashboard");
     }
   }, [user, loading, router]);
@@ -75,7 +77,7 @@ function SignUp() {
 
   const signUpWithGoogle = async () => {
     try {
-      await authWithGoogle(auth);
+      const res = await authWithGoogle(auth);
     } catch (error) {
       return toast.error(error.message, {
         style: {

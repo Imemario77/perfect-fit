@@ -5,6 +5,8 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useRouter } from "next/navigation";
+import { setDoc, getDoc, doc } from "firebase/firestore";
+import { db } from "@/firebase/config";
 
 import { auth } from "@/firebase/config";
 import {
@@ -33,6 +35,20 @@ function Dashboard() {
             },
           });
         }, 100);
+        async function getDocInfo() {
+          try {
+            const docSnap = await getDoc(doc(db, "userProfile", user.uid));
+
+            if (!docSnap.exists()) {
+              await setDoc(doc(db, "userProfile", user.uid), {
+                userId: user.uid,
+              });
+            }
+          } catch (error) {
+            console.log(error);
+          }
+        }
+        getDocInfo();
       }
     }
   }, [user, loading, router]);

@@ -4,7 +4,7 @@ import { ref, getDownloadURL, uploadBytesResumable } from "firebase/storage";
 import { storage } from "@/firebase/config";
 
 // uploading the file to firebase storage
-export const POST = async (req, res) => {
+export const POST = async (req, _) => {
   const formData = await req.formData();
 
   const file = formData.get("file");

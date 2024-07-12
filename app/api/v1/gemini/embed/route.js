@@ -1,26 +1,23 @@
+import { db } from "@/firebase/admin/config";
 import { app, firebaseConfig } from "@/firebase/config";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { embeddingFunction, genAI } from "@/lib/gemini";
+import { FieldValue } from "@google-cloud/firestore";
 import { NextResponse } from "next/server";
 
 export const POST = async (req, res) => {
   try {
-    const { description, additional_info } = await req.json();
+    const { galleryId, description } = await req.json();
 
-    // Access your API key as an environment variable (see our Getting Started tutorial)
-    const genAI = new GoogleGenerativeAI(
-      process.env.NEXT_PUBLIC_GEMINI_API_KEY
-    );
+    const embedding = await embeddingFunction(description);
 
-    // generate embeddings from the text
-    const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
-
-    const result = await model.embedContent(
-      description + " " + additional_info
-    );
-    const embedding = result.embedding;
+    console.log(embedding.values);
+    const docRef = await db.collection("galleryEmbedding").add({
+      embedding: embedding.values,
+      galleryId,
+    });
 
     return NextResponse.json({
-      embedding,
+      result: docRef.id,
       status: 200,
     });
   } catch (error) {
