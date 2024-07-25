@@ -1,7 +1,6 @@
-import { db } from "@/firebase/admin/config";
-import { app, firebaseConfig } from "@/firebase/config";
+import { app } from "@/firebase/config";
 import { embeddingFunction, genAI } from "@/lib/gemini";
-import { FieldValue } from "@google-cloud/firestore";
+import { FieldValue, Firestore } from "@google-cloud/firestore";
 import { NextResponse } from "next/server";
 
 export const POST = async (req, res) => {
@@ -10,18 +9,39 @@ export const POST = async (req, res) => {
 
     const embedding = await embeddingFunction(description);
 
-    console.log(embedding.values);
-    const docRef = await db.collection("galleryEmbedding").add({
-      embedding: embedding.values,
-      galleryId,
+    const db = new Firestore({
+      projectId: "perfect-fit-fc745",
+      keyFilename:
+        "C:/Users/ROBERTECH/Downloads/perfect-fit-fc745-firebase-adminsdk-dgswh-78513b0486.json",
     });
+
+    const docRef = await db
+      .collection("gallery")
+      .doc(galleryId)
+      .set(
+        {
+          embedding: FieldValue.vector(embedding.values),
+        },
+        { merge: true }
+      );
 
     return NextResponse.json({
       result: docRef.id,
       status: 200,
     });
   } catch (error) {
-    console.log(error);
-    return NextResponse.json({ message: "ann error occured", status: 500 });
+    // Determine the appropriate status code and error message
+    let status = 500; // Default to Internal Server Error
+    let message = "An internal server error occurred";
+    if (error.name === "AbortError") {
+      status = 408; // Request Timeout (if the error is due to a timeout)
+      message = "The request timed out";
+    } else if (error.response) {
+      status = error.response.status; // Use the status from the API error response
+      message =
+        error.response.data.message || "An error occurred while fetching data";
+    }
+
+    return NextResponse.json({ message }, { status });
   }
 };

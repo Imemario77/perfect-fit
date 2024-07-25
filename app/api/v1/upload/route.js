@@ -38,7 +38,18 @@ export const POST = async (req, _) => {
       { status: 201 }
     );
   } catch (error) {
-    console.log("Error occured ", error);
-    return NextResponse.json({ Message: "Failed", status: 500 });
+    // Determine the appropriate status code and error message
+    let status = 500; // Default to Internal Server Error
+    let message = "An internal server error occurred";
+    if (error.name === "AbortError") {
+      status = 408; // Request Timeout (if the error is due to a timeout)
+      message = "The request timed out";
+    } else if (error.response) {
+      status = error.response.status; // Use the status from the API error response
+      message =
+        error.response.data.message || "An error occurred while fetching data";
+    }
+
+    return NextResponse.json({ message }, { status });
   }
 };

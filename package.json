@@ -11,6 +11,7 @@
   "dependencies": {
     "@google-cloud/firestore": "^7.9.0",
     "@google/generative-ai": "^0.14.1",
+    "@tippyjs/react": "^4.2.6",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "firebase": "^10.12.2",

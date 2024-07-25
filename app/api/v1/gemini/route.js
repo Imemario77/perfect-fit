@@ -53,7 +53,7 @@ export const POST = async (req, res) => {
         text: `
       You are an AI assistant designed to help with getting detailed information from a pieces of clothing. Your task is to analyze a given image and output a structured JSON data format containing the following fields: description, category, color, pattern, and any other relevant information should be added to the description.
 
-      Please ensure the JSON output adheres to the following structure:
+      Please ensure the JSON output adheres to the following structure: you reply must always be in json format no matter what
         {
         "description": "A well detailed and structured description of the clothing item, it should contain all the information about the cloth like pattern etc.",
         "category": "The category of the clothing item should be one of these and nothing else (tops, bottoms, dresses, outerwear, footwear, accessories).",
@@ -83,6 +83,7 @@ export const POST = async (req, res) => {
     return NextResponse.json(
       {
         result: docRef.id,
+        description: result.description,
       },
       { status: 200 }
     );

@@ -17,6 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import Image from "next/image";
 
 function Dashboard() {
   const [user, loading, error] = useAuthState(auth);
@@ -70,7 +71,9 @@ function Dashboard() {
       <h2 className="text-[24px]">
         Welcome to Perfect Fit, where style meets tech!
       </h2>
-      <div></div>
+      <div>
+        <Image />
+      </div>
       <ToastContainer />
     </div>
   );
