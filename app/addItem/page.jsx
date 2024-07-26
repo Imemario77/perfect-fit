@@ -3,12 +3,12 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useRouter } from "next/navigation";
-import { auth } from "@/firebase/config";
+import { auth, db } from "@/firebase/config";
+import { doc, getDoc } from "firebase/firestore";
 
 function AddItem() {
   const [image, setImage] = useState(null);
@@ -22,6 +22,14 @@ function AddItem() {
   useEffect(() => {
     if (!loading && !user) {
       router.push("/login");
+    } else if (user) {
+      async function hasOnboarded() {
+        const userDoc = await getDoc(doc(db, "userProfile", user.uid));
+        if (!userDoc.exists() || !userDoc.data().onboardingCompleted) {
+          router.push("/onboarding");
+        }
+      }
+      hasOnboarded();
     }
   }, [user, loading, router]);
 
@@ -67,7 +75,7 @@ function AddItem() {
     if (file) {
       setImage(file);
       setPreview(URL.createObjectURL(file));
-      setResult(null)
+      setResult(null);
     }
   };
 

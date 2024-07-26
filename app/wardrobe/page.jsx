@@ -1,85 +1,86 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
-
-const dummyClothes = [
-  {
-    id: 1,
-    name: "Blue Oxford Shirt",
-    category: "tops",
-    color: "blue",
-    image: "/images/blue-shirt.jpg",
-  },
-  {
-    id: 2,
-    name: "Black Jeans",
-    category: "bottoms",
-    color: "black",
-    image: "/images/black-jeans.jpg",
-  },
-  {
-    id: 3,
-    name: "Brown Leather Shoes",
-    category: "shoes",
-    color: "brown",
-    image: "/images/brown-shoes.jpg",
-  },
-  {
-    id: 4,
-    name: "White T-Shirt",
-    category: "tops",
-    color: "white",
-    image: "/images/white-tshirt.jpg",
-  },
-  {
-    id: 5,
-    name: "Navy Blazer",
-    category: "outerwear",
-    color: "navy",
-    image: "/images/navy-blazer.jpg",
-  },
-  // Add more items as needed
-];
+import { auth, db } from "@/firebase/config";
+import { useRouter } from "next/navigation";
+import { useAuthState } from "react-firebase-hooks/auth";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+} from "firebase/firestore";
 
 function Wardrobe() {
-  const [clothes, setClothes] = useState(dummyClothes);
-  const [filter, setFilter] = useState({ category: "all", color: "all" });
+  const [clothes, setClothes] = useState([]);
+  const [filter, setFilter] = useState("all");
 
-  const categories = ["all", "tops", "bottoms", "shoes", "outerwear"];
-  const colors = ["all", "black", "white", "blue", "brown", "navy"];
+  const categories = [
+    "all",
+    "tops",
+    "bottoms",
+    "dresses",
+    "outerwear",
+    "footwear",
+    "accessories",
+  ];
 
   const filteredClothes = clothes.filter(
-    (item) =>
-      (filter.category === "all" || item.category === filter.category) &&
-      (filter.color === "all" || item.color === filter.color)
+    (item) => filter === "all" || item.category === filter
   );
+
+  let [user, loading, error] = useAuthState(auth);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/login");
+    } else if (user) {
+      async function hasOnboarded() {
+        try {
+          const userDoc = await getDoc(doc(db, "userProfile", user.uid));
+          if (!userDoc.exists() || !userDoc.data().onboardingCompleted) {
+            router.push("/onboarding");
+          } else {
+            const galleryQuery = query(
+              collection(db, "gallery"),
+              where("userRef", "==", user.uid)
+            );
+            const gallerySnapshot = await getDocs(galleryQuery);
+
+            const galleryDocs = gallerySnapshot.docs.map((doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            }));
+
+            console.log(galleryDocs);
+            setClothes(galleryDocs);
+          }
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        }
+      }
+      hasOnboarded();
+    }
+  }, [user, loading, router]);
 
   return (
     <main className="flex-grow container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">My Wardrobe</h1>
 
       <div className="mb-8 flex justify-between items-center">
-        <div className="space-x-4">
+        <div>
           <select
-            value={filter.category}
-            onChange={(e) => setFilter({ ...filter, category: e.target.value })}
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
             className="p-2 border rounded"
           >
             {categories.map((category) => (
               <option key={category} value={category}>
                 {category.charAt(0).toUpperCase() + category.slice(1)}
-              </option>
-            ))}
-          </select>
-          <select
-            value={filter.color}
-            onChange={(e) => setFilter({ ...filter, color: e.target.value })}
-            className="p-2 border rounded"
-          >
-            {colors.map((color) => (
-              <option key={color} value={color}>
-                {color.charAt(0).toUpperCase() + color.slice(1)}
               </option>
             ))}
           </select>
@@ -90,16 +91,17 @@ function Wardrobe() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {filteredClothes.length === 0 && <span>No item in this section</span>}
         {filteredClothes.map((item) => (
           <div key={item.id} className="bg-white p-4 rounded-lg shadow-md">
             <Image
-              src={item.image}
-              alt={item.name}
+              src={item.imageUrl}
+              alt={item.description}
               width={200}
               height={200}
               className="w-full h-48 object-cover mb-4 rounded"
             />
-            <h3 className="text-lg font-semibold mb-2">{item.name}</h3>
+            <h3 className="text-lg font-semibold mb-2">{item.type}</h3>
             <p className="text-gray-600 mb-2">Category: {item.category}</p>
             <p className="text-gray-600">Color: {item.color}</p>
           </div>

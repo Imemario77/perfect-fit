@@ -19,54 +19,61 @@ export const POST = async (req, _) => {
       model: "gemini-1.5-flash",
       temperature: 0.4,
       systemInstruction: `
-      Your task is to act as user personal stylist, selecting outfits from their virtual wardrobe that are appropriate for their events or daily life.
+Your task is to act as the user's personal stylist, selecting outfits from their virtual wardrobe that are appropriate for their events or daily life.
 
-      gender: male
+gender: male
 
-      Instructions:
-      1. Analyze and Categorize: Thoroughly analyze the user's prompt. Identify keywords related to the occasion (e.g., "date," "formal," "casual"), desired style ("stylish," "comfortable"), or specific items (dresses, tops, bottomwear, outerwear, footwear, accessories). 
-      2. Determine Clothing Categories: Based on the occasion and keywords, determine the necessary clothing categories for the outfit.  Prioritize essential items first (e.g dresses, tops, and bottomwear before accessories, outerwear etc).
-      3. Call tools that you feel are needed to get the clothin items:
-      * Pass relevant arguments:
-      * "userId": Always ${userId}
-      * "Description": This feild is important properties: Include keywords and descriptions from the prompt to refine the item selection. Be descriptive, and creative! (e.g., "nice stylish jeans for a date night", "a clean pair of suit trouser with a lot of vibrance")
-      4. Evaluate and Select: Review the returned options from each function call. Select the items that best fit the overall occasion, desired style, and complement each other. 
-      5. The current weather is currently: ${weather}
-      6. Provide Output: Create a JSON object with image URLs for the selected clothing items. Follow this format:
-      please put evrything into consideration be fore telling the user anything like the weather the person's gender etc
-      if it's a gown make sure it goes with the shoes, if a jean make sure it goes with the top and shoes , base on the weather you can add outercloth, it would be noce to allways add accesory 
+Instructions:
+1. Analyze and Categorize: Thoroughly analyze the user's prompt. Identify keywords related to the occasion (e.g., "date," "formal," "casual"), desired style ("stylish," "comfortable"), or specific items (dresses, tops, bottomwear, outerwear, footwear, accessories).
 
-        json
-        {
-            "top": "example url",
-            "bottom": "example url"
-            "accessory": {
-                "watch": "example url",
-                "glasses": "example url"
-            },
-            "footwear": "example url"
-        }
+2. Determine Clothing Categories: Based on the occasion and keywords, determine the necessary clothing categories for the outfit. Prioritize essential items first (e.g., dresses, tops, and bottomwear before accessories, outerwear etc).
 
-        another json example 
-         {
-            "dresses": "example url",
-            "outerwear": "example url"
-            "accessory": {
-                "watch": "example url",
-                "glasses": "example url"
-            },
-            "footwear": "example url"
-          }
-      
-      7. If after the full search you couldn't get any clothing item for a specfic field send a json a bit similar to this format { fieldName: "then just suggest something that would match the rest of the clothing item be like you can wear this i think it would match, also tell them why which is cause they don't have any thing in there virtual wardrobe, incssse of acessory do the same thing"} don't send exactly this personalise it base on the user's question
-    
-        example
+3. Call Tools: You MUST call the appropriate tools to fetch clothing items before providing any output. Use these tools:
+   - accessoryMatcher
+   - bottomsMatcher
+   - dressesMatcher
+   - footwearMatcher
+   - outerwearMatcher
+   - topsMatcher
 
-        user: i am going to the gym 
+   For each tool call, use these parameters:
+   - "userId": Always ${userId}
+   - "Description": Include keywords and descriptions from the prompt to refine the item selection. Be descriptive and creative! (e.g., "nice stylish jeans for a date night", "a clean pair of suit trousers with a lot of vibrance")
 
-        ai: call the topsMatcher, bottomsMatcher, footwearMatcher, accesoryMatcher, outerwearMatcher
-        ai now responds to the user base on what it got from the functions 
-    `,
+4. Evaluate and Select: Review the returned options from each function call. Select the items that best fit the overall occasion, desired style, and complement each other.
+
+5. Consider Weather: The current weather is: ${weather}. Factor this into your selections.
+
+6. Provide Output: After calling the necessary tools and evaluating the results, create a JSON object with image URLs for the selected clothing items. Follow this format:
+
+   {
+       "top": "example url",
+       "bottom": "example url",
+       "accessory": {
+           "watch": "example url",
+           "glasses": "example url"
+       },
+       "footwear": "example url"
+   }
+
+7. If no suitable items are found:
+   a. For items found but not suitable, include them in the JSON with a note explaining why.
+   b. For categories where no items were found, suggest appropriate items in the JSON.
+   c. Always return a JSON object, even if all fields contain suggestions rather than actual wardrobe items.
+
+Example when no suitable items are found:
+{
+    "top": "No suitable top found. I suggest a crisp white dress shirt for a formal occasion.",
+    "bottom": "No suitable bottom found. Consider dark navy dress trousers to pair with the suggested shirt.",
+    "accessory": {
+        "tie": "A silk tie in a deep red would complement the suggested outfit nicely.",
+        "watch": "A sleek, minimalist watch would add a touch of sophistication."
+    },
+    "footwear": "No suitable footwear found. Black leather oxford shoes would be ideal for this formal look."
+}
+
+Remember, you MUST call the appropriate tools before providing any output or suggestions.
+`,
       tools: {
         functionDeclarations: [
           accessoryMatcherFunctionDeclaration,
@@ -99,13 +106,27 @@ export const POST = async (req, _) => {
 
       console.log(aiResponseList);
 
-      const result2 = await chat.sendMessage(JSON.stringify(aiResponseList));
+      const matchingPrompt = `
+  Based on the user's request: "${prompt}"
+  And considering the current weather: ${weather}
+  
+  You MUST have called the necessary tools to fetch clothing items. 
+  Here are the results from those tool calls: ${JSON.stringify(aiResponseList)}
+  
+  Now, create a JSON object with your final outfit recommendations, including image URLs for items found in the wardrobe and suggestions for any missing items. Ensure your response starts with \`\`\`json and ends with \`\`\`.
+`;
 
+      const result2 = await chat.sendMessage(matchingPrompt);
+
+      console.log(matchingPrompt);
       console.log(result2.response.text());
-      // Log the text response.
-      let finalRes = result2.response.text().replace("```json", "");
-      finalRes = finalRes.replace("```", "");
-      return NextResponse.json({ message: JSON.parse(finalRes) });
+      if (result2.response.text().startsWith("```json")) {
+        let finalRes = result2.response.text().replace("```json", "");
+        finalRes = finalRes.replace("```", "");
+        return NextResponse.json({ message: JSON.parse(finalRes) });
+      } else {
+        return NextResponse.json({ message: result2.response.text() });
+      }
     } else {
       return NextResponse.json({ message: result.response.text() });
     }

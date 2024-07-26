@@ -128,7 +128,7 @@ export default function OutfitGenerator({ user }) {
 
   return (
     <div className="bg-white shadow-md rounded-lg p-6 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4">AI Wardrobe Assistant</h2>
+      <h2 className="text-2xl font-bold mb-4">Perfect Fit Assistant</h2>
       <div className="h-96 overflow-y-auto mb-4 p-4 bg-gray-100 rounded">
         {messages.map((message, index) => (
           <div
@@ -145,7 +145,7 @@ export default function OutfitGenerator({ user }) {
               {message.text}
             </span>
             {message.outfit && (
-              <div className="mt-2  grid grid-cols-2 gap-2:">
+              <div className="mt-2 grid grid-cols-2 gap-2:">
                 {Object.entries(message.outfit).map(([key, item]) =>
                   renderOutfitItem(key, item)
                 )}
@@ -154,7 +154,7 @@ export default function OutfitGenerator({ user }) {
           </div>
         ))}
       </div>
-      <div className="flex">
+      <div className="flex md:flex-row flex-col">
         <input
           type="text"
           value={userInput}

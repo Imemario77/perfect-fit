@@ -9,7 +9,6 @@ import "react-toastify/dist/ReactToastify.css";
 import Link from "next/link";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useRouter } from "next/navigation";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 import { lato_7 } from "@/fonts/font";
 import Logo_img from "@/public/perfectfit -logo.jpg";
@@ -23,7 +22,6 @@ function Login() {
 
   const [user, loading, error] = useAuthState(auth);
   const router = useRouter();
-
 
   useEffect(() => {
     if (!loading && user) {

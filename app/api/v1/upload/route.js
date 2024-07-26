@@ -18,7 +18,7 @@ export const POST = async (req, _) => {
     const filename = uuidv4() + "_" + file.name.replaceAll(" ", "_");
     console.log(filename);
 
-    const storageRef = ref(storage, `uploads/${filename}`);
+    const storageRef = ref(storage, `${formData.get("name")}/${filename}`);
 
     const uploadTask = uploadBytesResumable(storageRef, buffer, {
       contentType: file.type,

@@ -78,6 +78,7 @@ function SignUp() {
   const signUpWithGoogle = async () => {
     try {
       const res = await authWithGoogle(auth);
+      router.push("/onboarding");
     } catch (error) {
       return toast.error(error.message, {
         style: {

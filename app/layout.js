@@ -1,5 +1,6 @@
 import { Inter, Lato } from "next/font/google";
 import "./globals.css";
+import "react-toastify/dist/ReactToastify.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 const inter = Inter({ subsets: ["latin"] });

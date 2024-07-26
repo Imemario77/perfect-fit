@@ -10,7 +10,7 @@ export default function Navbar() {
     <nav className="bg-primary text-bg p-4">
       <div className="container mx-auto flex justify-between items-center">
         <Link href="/" className="text-2xl font-bold">
-          AI Wardrobe Assistant
+          Perfect Fit
         </Link>
 
         {/* Hamburger menu for mobile */}
