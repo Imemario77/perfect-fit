@@ -61,13 +61,26 @@ export const POST = async (req, res) => {
         "pattern": "The pattern of the clothing item (e.g., Solid, Striped, Checked).",
         "type":"The type of cloth should be one of these and nothing else (dress shirts, casual shirts, t-shirts, polo shirts, henleys, tank tops, kurtas, thobes, dishdashas, dashikis, guayaberas, barongs, kimonos, sweaters, cardigans, pullovers, hoodies, jerseys, jeans, chinos, dress pants, slacks, cargo pants, joggers, sweatpants, shalwars, lungis, sarongs, kilts, shorts, swim trunks, jackets, blazers, sport coats, bomber jackets, leather jackets, denim jackets, rain jackets, fleece jackets, coats, overcoats, trench coats, peacoats, parkas, down jackets, vests, suit vests, sweater vests, puffer vests, dress shoes, sneakers, high-tops, boots, work boots, Chelsea boots, hiking boots, sandals, hats, fedoras, baseball caps, beanies, turbans, keffiyehs, skullcaps, kippahs, belts, ties, bowties, scarves, gloves, sunglasses, watches, jewelry, rings, necklaces, bracelets, socks, blouses, crop tops, tunics, skirts, trousers, leggings, culottes, cocktail dresses, maxi dresses, sundresses, casual dresses, formal gowns, heels, flats, purses, clutches)"
         }
+
+        your reply must be json no matter what happens okay 
+
+        example output 
+        {
+          "category": "outerwear",
+          "color": "navy blue",
+          "description": "A navy blue blazer with a single-breasted closure and two button detailing. It has a notch lapel collar, long sleeves with button cuffs, and two front pockets.  ",
+          "imageUrl": "https://firebasestorage.googleapis.com/v0/b/perfect-fit-fc745.appspot.com/o/uploads%2Ffd1c5716-4d1c-4418-b0fc-28f6124436de_suit_blue.jpg?alt=media&token=cfa3d23f-e362-43c3-ade5-af6f7578ab5b",
+          "pattern": "Solid",
+          "type": "blazers",
+          "userRef": "L5CZlYJbTIbQigBWqwgNq"
+        }
 `,
       },
     ]);
 
-    // delete the files to clean storage
     fs.unlinkSync(localFilePath);
     fileManager.deleteFile(uploadResult.file.name);
+    console.log(result.response.text());
     result = JSON.parse(result.response.text());
 
     const docRef = await db.collection("gallery").add({
@@ -82,13 +95,21 @@ export const POST = async (req, res) => {
 
     return NextResponse.json(
       {
-        result: docRef.id,
+        category: result.category,
+        color: result.color,
         description: result.description,
+        imageUrl: img,
+        pattern: result.pattern,
+        type: result.type,
+        id: docRef.id,
       },
       { status: 200 }
     );
   } catch (error) {
     console.log(error);
-    return NextResponse.json({ message: "ann error occured", status: 500 });
+    return NextResponse.json({
+      message: "ann error occured",
+      status: 500,
+    });
   }
 };

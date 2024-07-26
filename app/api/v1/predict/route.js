@@ -9,28 +9,32 @@ import {
 } from "../../../../lib/tools/toolsPrompt";
 import { genAI } from "@/lib/gemini";
 import { functions } from "@/lib/tools/toolsLibary";
+import axios from "axios";
 
 export const POST = async (req, _) => {
-  const { prompt, userId } = await req.json();
+  const { prompt, userId, weather } = await req.json();
 
   try {
     const model = genAI.getGenerativeModel({
       model: "gemini-1.5-flash",
+      temperature: 0.4,
       systemInstruction: `
       Your task is to act as user personal stylist, selecting outfits from their virtual wardrobe that are appropriate for their events or daily life.
 
-      gender: female
+      gender: male
 
       Instructions:
-      1. Analyze and Categorize: Thoroughly analyze the user's prompt. Identify keywords related to the occasion (e.g., "date," "formal," "casual"), desired style ("stylish," "comfortable"), or specific items (dresses, top, bottomwear, outerwear, footwear, accessories). 
-      2. Determine Clothing Categories: Based on the occasion and keywords, determine the necessary clothing categories for the outfit.  Prioritize essential items first (e.g dresses, top, and bottomwear before accessories, outerwear etc).
+      1. Analyze and Categorize: Thoroughly analyze the user's prompt. Identify keywords related to the occasion (e.g., "date," "formal," "casual"), desired style ("stylish," "comfortable"), or specific items (dresses, tops, bottomwear, outerwear, footwear, accessories). 
+      2. Determine Clothing Categories: Based on the occasion and keywords, determine the necessary clothing categories for the outfit.  Prioritize essential items first (e.g dresses, tops, and bottomwear before accessories, outerwear etc).
       3. Call tools that you feel are needed to get the clothin items:
       * Pass relevant arguments:
       * "userId": Always ${userId}
       * "Description": This feild is important properties: Include keywords and descriptions from the prompt to refine the item selection. Be descriptive, and creative! (e.g., "nice stylish jeans for a date night", "a clean pair of suit trouser with a lot of vibrance")
       4. Evaluate and Select: Review the returned options from each function call. Select the items that best fit the overall occasion, desired style, and complement each other. 
-      5. The current weather is Sunny
+      5. The current weather is currently: ${weather}
       6. Provide Output: Create a JSON object with image URLs for the selected clothing items. Follow this format:
+      please put evrything into consideration be fore telling the user anything like the weather the person's gender etc
+      if it's a gown make sure it goes with the shoes, if a jean make sure it goes with the top and shoes , base on the weather you can add outercloth, it would be noce to allways add accesory 
 
         json
         {
@@ -44,7 +48,6 @@ export const POST = async (req, _) => {
         }
 
         another json example 
-
          {
             "dresses": "example url",
             "outerwear": "example url"
@@ -53,13 +56,13 @@ export const POST = async (req, _) => {
                 "glasses": "example url"
             },
             "footwear": "example url"
-        }
+          }
       
-      7. If after the full search you couldn't get any clothing item for a specfic field send a json a bit similar to this format { fieldName: "I could not find any good item i can find some items online if you don't mind"} don't send exactly this personalise it base on the user's question 
+      7. If after the full search you couldn't get any clothing item for a specfic field send a json a bit similar to this format { fieldName: "then just suggest something that would match the rest of the clothing item be like you can wear this i think it would match, also tell them why which is cause they don't have any thing in there virtual wardrobe, incssse of acessory do the same thing"} don't send exactly this personalise it base on the user's question
     
         example
 
-        user: i am going to the gym
+        user: i am going to the gym 
 
         ai: call the topsMatcher, bottomsMatcher, footwearMatcher, accesoryMatcher, outerwearMatcher
         ai now responds to the user base on what it got from the functions 
