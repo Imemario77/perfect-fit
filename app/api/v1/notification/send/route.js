@@ -1,7 +1,7 @@
 import { admin_messaging } from "@/firebase/admin/config";
 import { NextResponse } from "next/server";
 
-export const POST = async (req, res) => {
+export const GET = async (req, res) => {
   const message = {
     notification: {
       title: "Today's Outfit Suggestion From Perfect Fit",
