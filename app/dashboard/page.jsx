@@ -47,7 +47,7 @@ function Dashboard() {
       }
       hasOnboarded();
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, user.id]);
 
   useEffect(() => {
     function requestPermission() {
