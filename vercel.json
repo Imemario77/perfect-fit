@@ -6,7 +6,7 @@
     }
   ],
    "functions": {
-        "api/*.js": {
+        "api/v1/predict/route.js": {
             "maxDuration": 60
         }
      }
