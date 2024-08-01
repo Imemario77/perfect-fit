@@ -1,47 +1,67 @@
 "use client";
 
 // pages/profile.js
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { signOut } from "firebase/auth";
+import {
+  collection,
+  doc,
+  getCountFromServer,
+  getDoc,
+  query,
+  where,
+} from "firebase/firestore";
+import { auth, db } from "@/firebase/config";
 
 function Profile() {
-  // let [user, loading, error] = useAuthState(auth);
-  // const router = useRouter();
+  let [user, loading, error] = useAuthState(auth);
+  const router = useRouter();
+  let [userData, setUserData] = useState(null);
+  let [totalItems, setTotalItems] = useState("fetching.....");
 
-  // useEffect(() => {
-  //   if (!loading && !user) {
-  //     router.push("/login");
-  //   }
-  // }, [user, loading, router]);
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/login");
+    } else if (user) {
+      async function hasOnboarded() {
+        const userDoc = await getDoc(doc(db, "userProfile", user.uid));
+        if (!userDoc.exists() || !userDoc.data().onboardingCompleted) {
+          router.push("/onboarding");
+        } else {
+          setUserData(userDoc.data());
 
-  // In a real app, you'd fetch this data from your backend
-  const [user, setUser] = useState({
-    name: "Alex Johnson",
-    email: "alex@example.com",
-    profilePicture: "/images/profile-placeholder.jpg",
-    stylePreferences: ["Casual", "Minimalist"],
-    favoriteColors: ["Blue", "Black", "White"],
-    wardrobeStats: {
-      totalItems: 87,
-      mostWornCategory: "Tops",
-      leastWornCategory: "Formal Wear",
-    },
-  });
+          const galleryQuery = query(
+            collection(db, "gallery"),
+            where("userRef", "==", user.uid)
+          );
+          const gallerySnapshot = await getCountFromServer(galleryQuery);
+          setTotalItems(gallerySnapshot.data().count);
+        }
+      }
+      hasOnboarded();
+    }
+  }, [user, loading, router]);
 
-  const [isEditing, setIsEditing] = useState(false);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setUser((prevUser) => ({
-      ...prevUser,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = (e) => {
+  const handleLogout = (e) => {
     e.preventDefault();
+    signOut(auth)
+      .then(() => {
+        router.push("/login");
+      })
+      .catch((error) => {
+        toast.error("An error occured when trying to logout", {
+          style: {
+            fontSize: "10px",
+          },
+        });
+        console.log(error);
+      });
     // Here you would typically send the updated user data to your backend
     console.log("Updated user data:", user);
+
     setIsEditing(false);
   };
 
@@ -52,19 +72,22 @@ function Profile() {
       <div className="bg-white p-6 rounded-lg shadow-md mb-8">
         <div className="flex items-center mb-6">
           <Image
-            src={user.profilePicture}
-            alt={user.name}
+            src={
+              userData?.imageUrl ||
+              "https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg"
+            }
+            alt={userData?.name}
             width={100}
             height={100}
             className="rounded-full mr-4"
           />
           <div>
-            <h2 className="text-2xl font-semibold">{user.name}</h2>
-            <p className="text-gray-600">{user.email}</p>
+            <h2 className="text-2xl font-semibold">{userData?.name}</h2>
+            <p className="text-gray-600">{user?.email}</p>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <section>
           <div className="mb-4">
             <label
               className="block text-gray-700 text-sm font-bold mb-2"
@@ -76,9 +99,8 @@ function Profile() {
               type="text"
               id="name"
               name="name"
-              value={user.name}
-              onChange={handleInputChange}
-              disabled={!isEditing}
+              value={userData?.name}
+              disabled={true}
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             />
           </div>
@@ -86,66 +108,35 @@ function Profile() {
           <div className="mb-4">
             <label
               className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="email"
+              htmlFor="age"
             >
-              Email
+              Age
             </label>
             <input
-              type="email"
-              id="email"
-              name="email"
-              value={user.email}
-              onChange={handleInputChange}
-              disabled={!isEditing}
+              type="number"
+              id="age"
+              name="age"
+              value={userData?.age}
+              disabled={true}
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             />
           </div>
 
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">
-              Style Preferences
-            </label>
-            <p>{user.stylePreferences.join(", ")}</p>
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">
-              Favorite Colors
-            </label>
-            <p>{user.favoriteColors.join(", ")}</p>
-          </div>
-
-          {isEditing ? (
-            <button
-              type="submit"
-              className="bg-primary text-bg py-2 px-4 rounded hover:bg-sec-2 transition-colors"
-            >
-              Save Changes
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setIsEditing(true)}
-              className="bg-sec-1 text-text py-2 px-4 rounded hover:bg-sec-2 hover:text-bg transition-colors"
-            >
-              Edit Profile
-            </button>
-          )}
           <button
             type="button"
-            onClick={() => setIsEditing(true)}
+            onClick={handleLogout}
             className="hover:bg-white hover:text-sec-2 py-2 px-4 rounded ml-3 bg-sec-2 text-bg transition-colors"
           >
             Log out
           </button>
-        </form>
+        </section>
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-2xl font-semibold mb-4">Wardrobe Statistics</h2>
-        <p>Total Items: {user.wardrobeStats.totalItems}</p>
-        <p>Most Worn Category: {user.wardrobeStats.mostWornCategory}</p>
-        <p>Least Worn Category: {user.wardrobeStats.leastWornCategory}</p>
+        <h2 className="text-2xl font-semibold mb-4">Wardrobe Statistics</h2>{" "}
+        <p className="text-lg mb-2">
+          Total Items: <span className="font-bold">{totalItems}</span>
+        </p>
       </div>
     </main>
   );

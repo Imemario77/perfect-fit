@@ -12,7 +12,7 @@ export default function Home() {
           Your personal stylist powered by artificial intelligence
         </p>
         <Link
-          href="/get-outfit"
+          href="/dashboard"
           className="bg-primary text-bg py-3 px-6 rounded-full text-lg font-semibold hover:bg-sec-2 transition-colors"
         >
           Get Started
@@ -73,7 +73,7 @@ export default function Home() {
             <li>Mix and match for endless combinations</li>
           </ul>
           <Link
-            href="/get-outfit"
+            href="/getOutfit"
             className="bg-sec-1 text-text py-2 px-4 rounded hover:bg-sec-2 hover:text-bg transition-colors"
           >
             Get an Outfit
@@ -142,7 +142,7 @@ export default function Home() {
           Ready to revolutionize your wardrobe?
         </h2>
         <Link
-          href="/get-started"
+          href="/dashboard"
           className="bg-primary text-bg py-3 px-6 rounded-full text-lg font-semibold hover:bg-sec-2 transition-colors inline-block"
         >
           Get Started Now

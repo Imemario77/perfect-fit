@@ -1,10 +1,17 @@
-"use client"
+"use client";
 
 import { useState } from "react";
 import Link from "next/link";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "@/firebase/config";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  let [user, loading, error] = useAuthState(auth);
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <nav className="bg-primary text-bg p-4">
@@ -61,6 +68,11 @@ export default function Navbar() {
               Add Item
             </Link>
           </li>
+          <li>
+            <Link href="/profile" className="hover:text-sec-1">
+              Profile
+            </Link>
+          </li>
         </ul>
       </div>
 
@@ -90,6 +102,11 @@ export default function Navbar() {
           <li>
             <Link href="/addItem" className="block hover:text-sec-1">
               Add Item
+            </Link>
+          </li>{" "}
+          <li>
+            <Link href="/profile" className="hover:text-sec-1">
+              Profile
             </Link>
           </li>
         </ul>

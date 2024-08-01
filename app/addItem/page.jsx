@@ -8,7 +8,15 @@ import "driver.js/dist/driver.css";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useRouter } from "next/navigation";
 import { auth, db } from "@/firebase/config";
-import { doc, getDoc } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  limit,
+  query,
+  where,
+} from "firebase/firestore";
 
 function AddItem() {
   const [image, setImage] = useState(null);
@@ -23,18 +31,34 @@ function AddItem() {
     if (!loading && !user) {
       router.push("/login");
     } else if (user) {
-      async function hasOnboarded() {
-        const userDoc = await getDoc(doc(db, "userProfile", user.uid));
-        if (!userDoc.exists() || !userDoc.data().onboardingCompleted) {
-          router.push("/onboarding");
+      async function checkUserStatus() {
+        try {
+          const userDoc = await getDoc(doc(db, "userProfile", user.uid));
+          if (!userDoc.exists() || !userDoc.data().onboardingCompleted) {
+            router.push("/onboarding");
+          } else {
+            // Check if the gallery is empty
+            const galleryQuery = query(
+              collection(db, "gallery"),
+              where("userRef", "==", user.uid),
+              limit(1)
+            );
+            const gallerySnapshot = await getDocs(galleryQuery);
+
+            if (gallerySnapshot.empty) {
+              // Gallery is empty, initialize the tour
+              initializeTour();
+            }
+          }
+        } catch (error) {
+          console.error("Error checking user status:", error);
         }
       }
-      hasOnboarded();
+      checkUserStatus();
     }
   }, [user, loading, router]);
 
-  useEffect(() => {
-    // Initialize driver.js tour
+  const initializeTour = () => {
     const driverObj = driver({
       showProgress: true,
       steps: [
@@ -65,10 +89,8 @@ function AddItem() {
       ],
     });
 
-    // Start the tour automatically for first-time users
-    // In a real app, you'd check if the user has seen the tour before
     driverObj.drive();
-  }, []);
+  };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -80,12 +102,18 @@ function AddItem() {
   };
 
   const handleUpload = async () => {
-    if (!image) return;
+    if (!image)
+      returntoast.error("An image is need", {
+        style: {
+          fontSize: "10px",
+        },
+      });
 
     setIsUploading(true);
 
     const formData = new FormData();
     formData.append("file", image);
+    formData.append("name", "uploads");
 
     try {
       const uploadResponse = await axios.post("/api/v1/upload", formData, {
@@ -127,6 +155,16 @@ function AddItem() {
     }
   };
 
+  if (loading) {
+    return <div className="text-center p-8">Loading...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="text-center p-8 text-sec-2">Error: {error.message}</div>
+    );
+  }
+
   return (
     <main className="flex-grow container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Add New Item</h1>
@@ -141,8 +179,8 @@ function AddItem() {
           <li>Capture the entire item in the frame</li>
           <li>Avoid including multiple items in one image</li>
           <li>
-            For Accuracy please use your device camera (better still a mobile
-            phone)
+            For ease of use and best results, we recommend using your device's
+            camera (especially a smartphone camera)
           </li>
         </ul>
       </div>

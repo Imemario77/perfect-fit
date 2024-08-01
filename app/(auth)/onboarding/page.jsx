@@ -94,12 +94,24 @@ function Onboarding() {
         imageUrl = res.data.downloadURL;
       }
 
-      await setDoc(doc(db, "userProfile", user.uid), {
-        ...formData,
-        imageUrl,
-        userId: user.uid,
-        onboardingCompleted: true,
+      const uploadToGenimi = await axios.post("/api/v1/gemini/profile", {
+        img: imageUrl,
+        userRef: user.uid,
       });
+
+      console.log(uploadToGenimi.data)
+
+      if (uploadToGenimi.data.skinDetected) {
+        await setDoc(doc(db, "userProfile", user.uid), {
+          ...formData,
+          imageUrl,
+          userId: user.uid,
+          onboardingCompleted: true,
+          skinTone: uploadToGenimi.data.skinToneDescription,
+        });
+      } else {
+        throw new Error("No skin detected in the image upload another");
+      }
 
       router.push("/dashboard");
     } catch (error) {

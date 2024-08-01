@@ -3,9 +3,15 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import axios from "axios";
+import { addDoc, collection } from "firebase/firestore";
+import { db } from "@/firebase/config";
+import { toast, ToastContainer } from "react-toastify";
+import { Truck } from "lucide-react";
 
 export default function OutfitGenerator({ user }) {
-  let [weather, setWeather] = useState("");
+  const [weather, setWeather] = useState("");
+  const [disbled, setDisabled] = useState(false);
+  const [outfits, setOutfits] = useState([]);
 
   useEffect(() => {
     const fetchWeatherData = async () => {
@@ -19,7 +25,6 @@ export default function OutfitGenerator({ user }) {
                 // Metric for Celsius
               );
               setWeather(res?.data?.weather[0]?.description);
-              console.log(res);
             } catch (error) {
               console.error("Error fetching weather:", error);
               setWeather("Error: Could not fetch weather data.");
@@ -39,41 +44,70 @@ export default function OutfitGenerator({ user }) {
   }, []);
 
   const [messages, setMessages] = useState([
+    { parts: [{ text: "Hello" }], role: "user" },
     {
-      text: "Hi! I'm your AI Wardrobe Assistant. Where are you going today?",
-      sender: "ai",
+      parts: [
+        {
+          text: "Hi! I'm your AI Wardrobe Assistant. Where are you going today?",
+        },
+      ],
+      role: "model",
     },
   ]);
   const [userInput, setUserInput] = useState("");
 
   const handleSendMessage = async () => {
-    if (!userInput.trim()) return;
+    const input = userInput;
+    setUserInput("");
 
-    setMessages((prev) => [...prev, { text: userInput, sender: "user" }]);
+    if (!input.trim()) return;
+
+    setMessages((prev) => [
+      ...prev,
+      { parts: [{ text: input }], role: "user" },
+    ]);
 
     try {
       const predictOutfit = await axios.post("/api/v1/predict", {
-        prompt: userInput,
-        userId: user.uid,
+        prompt: input,
+        userId: user.userId,
         weather,
+        messages: messages.map(({ parts, role }) => ({
+          parts: [
+            {
+              text: parts[0].text.includes(":")
+                ? parts[0].text.split(":")[1]
+                : parts[0].text,
+            },
+          ],
+          role,
+        })),
+        skinTone: user.skinTone,
+        gender: user.gender,
       });
-
-      console.log(predictOutfit);
 
       if (typeof predictOutfit.data.message === "string") {
         setMessages((prev) => [
           ...prev,
           {
-            text: predictOutfit.data.message,
-            sender: "ai",
+            parts: [{ text: predictOutfit.data.message }],
+            role: "model",
           },
         ]);
       } else {
         setMessages((prev) => [
           ...prev,
           {
-            text: "Based on where you're going, I suggest this outfit:",
-            sender: "ai",
+            parts: [
+              {
+                text:
+                  "Based on where you're going, I suggest this outfit " +
+                  predictOutfit.data.text +
+                  ": " +
+                  JSON.stringify(predictOutfit.data.message),
+              },
+            ],
+            role: "model",
             outfit: predictOutfit.data.message,
           },
         ]);
@@ -83,13 +117,35 @@ export default function OutfitGenerator({ user }) {
       setMessages((prev) => [
         ...prev,
         {
-          text: "Sorry, I couldn't generate an outfit at this time. Please try again.",
-          sender: "ai",
+          parts: [
+            {
+              text: "Sorry, I couldn't generate an outfit at this time. Please try again.",
+            },
+          ],
+          role: "model",
         },
       ]);
     }
+  };
 
-    setUserInput("");
+  const handleAcceptItem = async (outfit) => {
+    console.log(user);
+    if (!user) return;
+    try {
+      await addDoc(collection(db, "outfitHistory"), {
+        ...outfit,
+        userRef: user.userId,
+        createdAt: new Date(),
+      });
+      toast.success("SUggestion has been saved to history", {
+        style: {
+          fontSize: "10px",
+        },
+      });
+    } catch (error) {
+      console.error("Error adding event: ", error);
+      alert("Failed to add event. Please try again.");
+    }
   };
 
   const renderOutfitItem = (key, item) => {
@@ -121,7 +177,7 @@ export default function OutfitGenerator({ user }) {
     } else if (typeof item === "object") {
       // If item is an object, render its contents
       return Object.entries(item).map(([subKey, subItem]) =>
-        renderOutfitItem(`${key}-${subKey}`, subItem)
+        renderOutfitItem(`${subKey}`, subItem)
       );
     }
   };
@@ -133,23 +189,39 @@ export default function OutfitGenerator({ user }) {
         {messages.map((message, index) => (
           <div
             key={index}
-            className={`mb-4 ${message.sender === "user" ? "text-right" : ""}`}
+            className={`mb-4 ${message.role === "user" ? "text-right" : ""}`}
           >
-            <span
-              className={`inline-block p-2 rounded-lg ${
-                message.sender === "user"
-                  ? "bg-primary text-bg"
-                  : "bg-sec-1 text-text"
-              }`}
-            >
-              {message.text}
-            </span>
+            {index !== 0 && (
+              <span
+                className={`inline-block p-2 rounded-lg ${
+                  message.role === "user"
+                    ? "bg-primary text-bg"
+                    : "bg-sec-1 text-text"
+                }`}
+              >
+                {message.parts[0].text.split(":")[0]}
+              </span>
+            )}
             {message.outfit && (
-              <div className="mt-2 grid grid-cols-2 gap-2:">
-                {Object.entries(message.outfit).map(([key, item]) =>
-                  renderOutfitItem(key, item)
-                )}
-              </div>
+              <>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  {Object.entries(message.outfit).map(([key, item]) =>
+                    renderOutfitItem(`${key}`, item)
+                  )}
+                </div>
+                <button
+                  onClick={(e) => {
+                    setDisabled(true);
+                    e.preventDefault();
+                    handleAcceptItem(message.outfit);
+                    setDisabled(false);
+                  }}
+                  disbled={disbled}
+                  className="bg-green-500 py-2 px-4  text-white ml-4 mt-3 rounded-2xl disabled:bg-gray-500"
+                >
+                  Use Outfit
+                </button>
+              </>
             )}
           </div>
         ))}
@@ -170,6 +242,7 @@ export default function OutfitGenerator({ user }) {
           Send
         </button>
       </div>
+      <ToastContainer />
     </div>
   );
 }
