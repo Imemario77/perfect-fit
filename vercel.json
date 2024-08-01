@@ -4,5 +4,10 @@
       "path": "/api/v1/notification/send",
       "schedule": "0 23 * * *"
     }
-  ]
+  ],
+   "functions": {
+    "api/*": {
+    "maxDuration": 60
+     }
+   }
 }
