@@ -61,8 +61,6 @@ function Profile() {
       });
     // Here you would typically send the updated user data to your backend
     console.log("Updated user data:", user);
-
-    setIsEditing(false);
   };
 
   return (

@@ -4,12 +4,14 @@ import { useState } from "react";
 import Link from "next/link";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/firebase/config";
+import { usePathname } from "next/navigation";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   let [user, loading, error] = useAuthState(auth);
+  let pathname = usePathname();
 
-  if (!user) {
+  if (!user && pathname.includes("/login") || pathname.includes("/signup")) {
     return null;
   }
 

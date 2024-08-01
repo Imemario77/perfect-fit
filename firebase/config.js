@@ -23,5 +23,5 @@ export const db = getFirestore(initializeApp(firebaseConfig));
 
 export const storage = getStorage(app);
 
-export const messaging =
-  typeof window !== "undefined" ? getMessaging(app) : null;
+// export const messaging =
+//   typeof window !== "undefined" ? getMessaging(app) : null;

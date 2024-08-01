@@ -6,14 +6,19 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "@/firebase/config";
+import { getMessaging } from "firebase/messaging/sw";
+
 import {
   collection,
   doc,
   getCountFromServer,
   getDoc,
   query,
+  setDoc,
   where,
 } from "firebase/firestore";
+import { getToken, isSupported } from "firebase/messaging";
+import axios from "axios";
 
 function Dashboard() {
   let [user, loading, error] = useAuthState(auth);
@@ -43,6 +48,78 @@ function Dashboard() {
       hasOnboarded();
     }
   }, [user, loading, router]);
+
+  useEffect(() => {
+    function requestPermission() {
+      console.log("Requesting permission...");
+      Notification.requestPermission().then((permission) => {
+        if (permission === "granted") {
+          console.log("Notification permission granted.");
+        }
+      });
+    }
+    const enableNotification = async () => {
+      // Get registration token. Initially this makes a network call, once retrieved
+      // subsequent calls to getToken will return from cache.
+
+      if (await isSupported()) {
+        if (userData) {
+          const messaging =
+            typeof window !== "undefined" ? getMessaging() : null;
+          getToken(messaging, { vapidKey: process.env.NEXT_PUBLIC_VAPID_KEY })
+            .then(async (currentToken) => {
+              if (currentToken) {
+                if (
+                  userData.fmcToken &&
+                  userData.fmcToken.includes(currentToken)
+                ) {
+                  console.log("token exist");
+                } else {
+                  if (Array.isArray(userData.fmcToken)) {
+                    await setDoc(
+                      doc(db, "userProfile", user.uid),
+                      {
+                        fmcToken: [...userData.fmcToken, currentToken],
+                      },
+                      { merge: true }
+                    );
+                  } else {
+                    await setDoc(
+                      doc(db, "userProfile", user.uid),
+                      {
+                        fmcToken: [currentToken],
+                      },
+                      { merge: true }
+                    );
+                  }
+
+                  const subscribeToNotification = await axios.post(
+                    "/api/v1/notification",
+                    {
+                      token: currentToken,
+                    }
+                  );
+
+                  console.log(subscribeToNotification.data);
+                }
+              } else {
+                // Show permission request UI
+                console.log(
+                  "No registration token available. Request permission to generate one."
+                );
+                // ...
+              }
+            })
+            .catch((err) => {
+              console.log("An error occurred while retrieving token. ", err);
+              // ...
+            });
+        }
+      }
+    };
+    requestPermission();
+    enableNotification();
+  }, [userData]);
 
   if (loading) {
     return <div className="text-center p-8">Loading...</div>;
