@@ -21,7 +21,7 @@ export default function OutfitGenerator({ user }) {
             const { latitude, longitude } = position.coords;
             try {
               const res = await axios.get(
-                `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=2dbe70f0c515e00281029ae3a276f5b2&units=metric`
+                `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${process.env.NEXT_PUBLIC_OPEN_WAETHER}&units=metric`
                 // Metric for Celsius
               );
               setWeather(res?.data?.weather[0]?.description);

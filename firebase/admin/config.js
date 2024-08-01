@@ -1,5 +1,6 @@
 import * as admin from "firebase-admin";
-import serviceAccount from "C:/Users/ROBERTECH/Downloads/perfect-fit-fc745-firebase-adminsdk-dgswh-78513b0486.json";
+
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
 
 if (admin.apps.length === 0) {
   admin.initializeApp({
