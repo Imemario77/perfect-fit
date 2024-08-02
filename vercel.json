@@ -4,10 +4,5 @@
       "path": "/api/v1/notification/send",
       "schedule": "0 23 * * *"
     }
-  ],
-   "functions": {
-        "api/v1/predict/route.js": {
-            "maxDuration": 60
-        }
-     }
+  ]
 }

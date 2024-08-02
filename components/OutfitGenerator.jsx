@@ -68,6 +68,7 @@ export default function OutfitGenerator({ user }) {
     ]);
 
     try {
+      console.log(messages)
       const predictOutfit = await axios.post("/api/v1/predict", {
         prompt: input,
         userId: user.userId,
