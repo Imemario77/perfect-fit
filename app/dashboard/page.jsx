@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "@/firebase/config";
 import { getMessaging } from "firebase/messaging/sw";
-
 import {
   collection,
   doc,
@@ -52,11 +51,12 @@ function Dashboard() {
   useEffect(() => {
     function requestPermission() {
       console.log("Requesting permission...");
-      Notification.requestPermission().then((permission) => {
-        if (permission === "granted") {
-          console.log("Notification permission granted.");
-        }
-      });
+      typeof Notification !== "undefined" &&
+        Notification.requestPermission().then((permission) => {
+          if (permission === "granted") {
+            console.log("Notification permission granted.");
+          }
+        });
     }
     const enableNotification = async () => {
       // Get registration token. Initially this makes a network call, once retrieved

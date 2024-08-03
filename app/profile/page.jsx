@@ -67,21 +67,25 @@ function Profile() {
     <main className="flex-grow container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">User Profile</h1>
 
-      <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-        <div className="flex items-center mb-6">
-          <Image
-            src={
-              userData?.imageUrl ||
-              "https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg"
-            }
-            alt={userData?.name}
-            width={100}
-            height={100}
-            className="rounded-full mr-4"
-          />
-          <div>
-            <h2 className="text-2xl font-semibold">{userData?.name}</h2>
-            <p className="text-gray-600">{user?.email}</p>
+      <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md mb-8">
+        <div className="flex flex-col sm:flex-row items-center mb-6">
+          <div className="w-24 h-24 mb-4 sm:mb-0 sm:mr-4 flex-shrink-0">
+            <Image
+              src={
+                userData?.imageUrl ||
+                "https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg"
+              }
+              alt={userData?.name}
+              width={96}
+              height={96}
+              className="rounded-full object-cover w-full h-full"
+            />
+          </div>
+          <div className="text-center sm:text-left">
+            <h2 className="text-xl sm:text-2xl font-semibold">
+              {userData?.name}
+            </h2>
+            <p className="text-gray-600 text-sm sm:text-base">{user?.email}</p>
           </div>
         </div>
 
@@ -123,7 +127,7 @@ function Profile() {
           <button
             type="button"
             onClick={handleLogout}
-            className="hover:bg-white hover:text-sec-2 py-2 px-4 rounded ml-3 bg-sec-2 text-bg transition-colors"
+            className="w-full sm:w-auto hover:bg-white hover:text-sec-2 py-2 px-4 rounded bg-sec-2 text-bg transition-colors"
           >
             Log out
           </button>

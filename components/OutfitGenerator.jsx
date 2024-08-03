@@ -6,12 +6,19 @@ import axios from "axios";
 import { addDoc, collection } from "firebase/firestore";
 import { db } from "@/firebase/config";
 import { toast, ToastContainer } from "react-toastify";
-import { Truck } from "lucide-react";
 
 export default function OutfitGenerator({ user }) {
   const [weather, setWeather] = useState("");
-  const [disbled, setDisabled] = useState(false);
-  const [outfits, setOutfits] = useState([]);
+  const [isDisbled, setIsDisabled] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const LoadingIndicator = () => (
+    <div className="flex items-center space-x-2 animate-pulse">
+      <div className="w-2 h-2 bg-primary rounded-full"></div>
+      <div className="w-2 h-2 bg-primary rounded-full"></div>
+      <div className="w-2 h-2 bg-primary rounded-full"></div>
+    </div>
+  );
 
   useEffect(() => {
     const fetchWeatherData = async () => {
@@ -59,7 +66,7 @@ export default function OutfitGenerator({ user }) {
   const handleSendMessage = async () => {
     const input = userInput;
     setUserInput("");
-
+    setIsLoading(true);
     if (!input.trim()) return;
 
     setMessages((prev) => [
@@ -68,7 +75,7 @@ export default function OutfitGenerator({ user }) {
     ]);
 
     try {
-      console.log(messages)
+      console.log(messages);
       const predictOutfit = await axios.post("/api/v1/predict", {
         prompt: input,
         userId: user.userId,
@@ -126,19 +133,22 @@ export default function OutfitGenerator({ user }) {
           role: "model",
         },
       ]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleAcceptItem = async (outfit) => {
     console.log(user);
     if (!user) return;
+    setIsDisabled(true);
     try {
       await addDoc(collection(db, "outfitHistory"), {
         ...outfit,
         userRef: user.userId,
         createdAt: new Date(),
       });
-      toast.success("SUggestion has been saved to history", {
+      toast.success("Suggestion has been saved to history", {
         style: {
           fontSize: "10px",
         },
@@ -146,6 +156,8 @@ export default function OutfitGenerator({ user }) {
     } catch (error) {
       console.error("Error adding event: ", error);
       alert("Failed to add event. Please try again.");
+    } finally {
+      setIsDisabled(false);
     }
   };
 
@@ -211,14 +223,11 @@ export default function OutfitGenerator({ user }) {
                   )}
                 </div>
                 <button
-                  onClick={(e) => {
-                    setDisabled(true);
-                    e.preventDefault();
-                    handleAcceptItem(message.outfit);
-                    setDisabled(false);
+                  onClick={async () => {
+                    await handleAcceptItem(message.outfit);
                   }}
-                  disbled={disbled}
-                  className="bg-green-500 py-2 px-4  text-white ml-4 mt-3 rounded-2xl disabled:bg-gray-500"
+                  disabled={isDisbled}
+                  className="bg-green-500 py-2 px-4  text-white ml-4 mt-3 rounded-2xl disabled:bg-gray-500 disabled:cursor-not-allowed"
                 >
                   Use Outfit
                 </button>
@@ -226,6 +235,13 @@ export default function OutfitGenerator({ user }) {
             )}
           </div>
         ))}
+        {isLoading && (
+          <div className="text-left">
+            <div className="mt-2">
+              <LoadingIndicator />
+            </div>
+          </div>
+        )}
       </div>
       <div className="flex md:flex-row flex-col">
         <input

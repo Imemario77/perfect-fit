@@ -11,7 +11,10 @@ export const POST = async (req, res) => {
 
     const db = new Firestore({
       projectId: "perfect-fit-fc745",
-      keyFilename: process.env.FIREBASE_SERVICE_ACCOUNT_KEY,
+      credentials: {
+        client_email: process.env.FIREBASE_CLIENT_EMAIL,
+        private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+      },
     });
 
     const docRef = await db
@@ -29,6 +32,7 @@ export const POST = async (req, res) => {
       status: 200,
     });
   } catch (error) {
+    console.log(error);
     // Determine the appropriate status code and error message
     let status = 500; // Default to Internal Server Error
     let message = "An internal server error occurred";

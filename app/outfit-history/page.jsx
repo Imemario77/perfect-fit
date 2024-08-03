@@ -88,6 +88,7 @@ export default function OutfitHistory() {
     <div className="container mx-auto px-4 py-8 bg-bg">
       <h1 className="text-2xl font-bold mb-6 text-text">Outfit History</h1>
       <div className="space-y-4">
+        {outfits < 1 && <p>You have no previous outfit history</p>}
         {outfits.map((outfit, index) => (
           <div key={outfit.id} className="bg-white p-4 rounded-lg shadow">
             <div className="flex items-center mb-2">
@@ -100,7 +101,7 @@ export default function OutfitHistory() {
                 {outfit.createdAt && outfit.createdAt.seconds
                   ? format(new Date(outfit.createdAt.seconds * 1000), "PPP")
                   : "Date unknown"}
-              </span> 
+              </span>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
               {Object.entries(outfit).map(([key, value]) => {
