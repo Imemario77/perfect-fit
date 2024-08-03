@@ -11,8 +11,7 @@ export const POST = async (req, res) => {
 
     const db = new Firestore({
       projectId: "perfect-fit-fc745",
-      keyFilename:
-        "C:/Users/ROBERTECH/Downloads/perfect-fit-fc745-firebase-adminsdk-dgswh-78513b0486.json",
+      keyFilename: process.env.FIREBASE_SERVICE_ACCOUNT_KEY,
     });
 
     const docRef = await db
