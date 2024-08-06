@@ -1,6 +1,7 @@
 import { admin_messaging } from "@/firebase/admin/config";
 import { NextResponse } from "next/server";
 
+// register for notification
 export const POST = async (req, res) => {
   try {
     let { token } = await req.json();

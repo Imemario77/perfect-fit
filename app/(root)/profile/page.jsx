@@ -28,8 +28,6 @@ function Profile() {
         const userDoc = await getDoc(doc(db, "userProfile", user.uid));
         if (userDoc.exists()) {
           setUserData(userDoc.data());
-          console.log(userData);
-
           const galleryQuery = query(
             collection(db, "gallery"),
             where("userRef", "==", user.uid)

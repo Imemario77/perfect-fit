@@ -34,14 +34,6 @@ function AddItem() {
   let [user, loading, error] = useAuthState(auth);
   const router = useRouter();
 
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get("code");
-    if (code && user) {
-      handleAuthorizationCode(code);
-    }
-  }, [user]);
-
   const handleAuthorizationCode = async (code) => {
     try {
       // Exchange the code for tokens
@@ -77,6 +69,14 @@ function AddItem() {
       });
     }
   };
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get("code");
+    if (code && user) {
+      handleAuthorizationCode(code);
+    }
+  }, [user, handleAuthorizationCode]);
 
   useEffect(() => {
     if (user) {

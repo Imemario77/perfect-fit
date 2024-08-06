@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 
 const GooglePhotosGallery = ({ mediaItems, onSelect }) => {
@@ -28,7 +29,9 @@ const GooglePhotosGallery = ({ mediaItems, onSelect }) => {
           className="relative aspect-square overflow-hidden rounded-lg cursor-pointer group"
           onClick={() => handleImageClick(item)}
         >
-          <img
+          <Image
+            width={200}
+            height={200}
             src={item.baseUrl}
             alt={item.filename}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
@@ -42,7 +45,9 @@ const GooglePhotosGallery = ({ mediaItems, onSelect }) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-4 rounded-lg max-w-md">
             <h3 className="text-lg font-semibold mb-2">Confirm Selection</h3>
-            <img
+            <Image
+              width={200}
+              height={200}
               src={selectedItem.baseUrl}
               alt={selectedItem.filename}
               className="w-full h-48 object-cover mb-4 rounded"

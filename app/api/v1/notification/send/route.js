@@ -2,6 +2,7 @@ import { admin_messaging } from "@/firebase/admin/config";
 import { genAI } from "@/lib/gemini";
 import { NextResponse } from "next/server";
 
+// cron job to send notfication
 export const GET = async (req, res) => {
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
