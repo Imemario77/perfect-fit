@@ -58,6 +58,7 @@ export const POST = async (req, _) => {
     const matchingPrompt = `
       Based on the user's request: "${prompt}"
       And considering the current weather: ${weather}
+      Remenber that the today's date is ${new Date()}
       
       Here are the results from the tool calls: ${JSON.stringify(
         aiResponseList

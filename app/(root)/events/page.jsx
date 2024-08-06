@@ -29,10 +29,6 @@ function EventsPage() {
     setEvents(eventsList);
   };
 
-  if (loading) {
-    return <div className="text-center p-8">Loading...</div>;
-  }
-
   if (error) {
     return (
       <div className="text-center p-8 text-sec-2">Error: {error.message}</div>

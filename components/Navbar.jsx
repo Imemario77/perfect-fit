@@ -1,19 +1,8 @@
-"use client";
-
 import { useState } from "react";
 import Link from "next/link";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/firebase/config";
-import { usePathname } from "next/navigation";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  let [user, loading, error] = useAuthState(auth);
-  let pathname = usePathname();
-
-  if (!user && pathname.includes("/login") || pathname.includes("/signup")) {
-    return null;
-  }
 
   return (
     <nav className="bg-primary text-bg p-4">
@@ -80,7 +69,10 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       <div className={`lg:hidden mt-4 mobile-menu ${isMenuOpen ? "open" : ""}`}>
-        <ul className="flex flex-col space-y-2">
+        <ul
+          onClick={() => setIsMenuOpen(false)}
+          className="flex flex-col space-y-2"
+        >
           <li>
             <Link href="/" className="block hover:text-sec-1">
               Home

@@ -18,26 +18,7 @@ import {
   setDoc,
   where,
 } from "firebase/firestore";
-
-const GooglePhotosGallery = ({ mediaItems, onSelect }) => {
-  return (
-    <div className="grid grid-cols-3 gap-4">
-      {mediaItems.map((item) => (
-        <div
-          key={item.id}
-          className="cursor-pointer"
-          onClick={() => onSelect(item)}
-        >
-          <img
-            src={item.baseUrl}
-            alt={item.filename}
-            className="w-full h-auto"
-          />
-        </div>
-      ))}
-    </div>
-  );
-};
+import GooglePhotosGallery from "@/components/GoogleSelectedImages";
 
 function AddItem() {
   const [image, setImage] = useState(null);
@@ -98,28 +79,22 @@ function AddItem() {
   };
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login");
-    } else if (user) {
+    if (user) {
       async function checkUserStatus() {
         try {
           const userDoc = await getDoc(doc(db, "userProfile", user.uid));
-          if (!userDoc.exists() || !userDoc.data().onboardingCompleted) {
-            router.push("/onboarding");
-          } else {
-            setUserData(userDoc.data());
-            // Check if the gallery is empty
-            const galleryQuery = query(
-              collection(db, "gallery"),
-              where("userRef", "==", user.uid),
-              limit(1)
-            );
-            const gallerySnapshot = await getDocs(galleryQuery);
+          setUserData(userDoc.data());
+          // Check if the gallery is empty
+          const galleryQuery = query(
+            collection(db, "gallery"),
+            where("userRef", "==", user.uid),
+            limit(1)
+          );
+          const gallerySnapshot = await getDocs(galleryQuery);
 
-            if (gallerySnapshot.empty) {
-              // Gallery is empty, initialize the tour
-              initializeTour();
-            }
+          if (gallerySnapshot.empty) {
+            // Gallery is empty, initialize the tour
+            initializeTour();
           }
         } catch (error) {
           console.error("Error checking user status:", error);
@@ -244,7 +219,6 @@ function AddItem() {
           "Content-Type": "multipart/form-data",
         },
       });
-      console.log(uploadResponse.data);
 
       const uploadToGenimi = await axios.post("/api/v1/gemini", {
         img: uploadResponse.data.downloadURL,
@@ -364,10 +338,6 @@ function AddItem() {
     }
   };
 
-  if (loading) {
-    return <div className="text-center p-8">Loading...</div>;
-  }
-
   if (error) {
     return (
       <div className="text-center p-8 text-sec-2">Error: {error.message}</div>
@@ -390,6 +360,10 @@ function AddItem() {
           <li>
             For ease of use and best results, we recommend using your device's
             camera (especially a smartphone camera)
+          </li>
+          <li>
+            You can also connect to your google photos libary and upload your
+            images
           </li>
         </ul>
       </div>
@@ -520,6 +494,8 @@ function AddItem() {
                     </svg>
                     Setting up google
                   </span>
+                ) : mediaItems?.length >= 1 ? (
+                  "Load more"
                 ) : (
                   "Use Google Photos"
                 )}
@@ -583,7 +559,7 @@ function AddItem() {
                   Loading
                 </span>
               ) : (
-                "Load"
+                "Load More"
               )}
             </button>
           )}

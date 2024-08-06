@@ -13,24 +13,16 @@ function GetOutFit() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login");
-    } else if (user) {
+    if (user) {
       async function hasOnboarded() {
         const userDoc = await getDoc(doc(db, "userProfile", user.uid));
-        if (!userDoc.exists() || !userDoc.data().onboardingCompleted) {
-          router.push("/onboarding");
-        } else {
+        if (userDoc.exists()) {
           setUserData(userDoc.data());
         }
       }
       hasOnboarded();
     }
   }, [user, loading, router]);
-
-  if (loading) {
-    return <div className="text-center p-8">Loading...</div>;
-  }
 
   if (error) {
     return (

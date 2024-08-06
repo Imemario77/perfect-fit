@@ -23,15 +23,12 @@ function Profile() {
   let [totalItems, setTotalItems] = useState("fetching.....");
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login");
-    } else if (user) {
+    if (user) {
       async function hasOnboarded() {
         const userDoc = await getDoc(doc(db, "userProfile", user.uid));
-        if (!userDoc.exists() || !userDoc.data().onboardingCompleted) {
-          router.push("/onboarding");
-        } else {
+        if (userDoc.exists()) {
           setUserData(userDoc.data());
+          console.log(userData);
 
           const galleryQuery = query(
             collection(db, "gallery"),
@@ -122,6 +119,15 @@ function Profile() {
               disabled={true}
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             />
+          </div>
+          <div className="mb-4">
+            <label
+              className="block text-gray-700 text-sm font-bold mb-2"
+              htmlFor="skinTone"
+            >
+              Skin Tone
+            </label>
+           <p>{userData?.skinTone}</p>
           </div>
 
           <button

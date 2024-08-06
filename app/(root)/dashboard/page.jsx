@@ -26,14 +26,10 @@ function Dashboard() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login");
-    } else if (user) {
+    if (user) {
       async function hasOnboarded() {
         const userDoc = await getDoc(doc(db, "userProfile", user.uid));
-        if (!userDoc.exists() || !userDoc.data().onboardingCompleted) {
-          router.push("/onboarding");
-        } else {
+        if (userDoc.exists()) {
           setUserData(userDoc.data());
 
           const galleryQuery = query(
@@ -121,16 +117,6 @@ function Dashboard() {
     enableNotification();
   }, [userData]);
 
-  if (loading) {
-    return <div className="text-center p-8">Loading...</div>;
-  }
-
-  if (error) {
-    return (
-      <div className="text-center p-8 text-sec-2">Error: {error.message}</div>
-    );
-  }
-
   return (
     <main className="flex-grow container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">
@@ -187,24 +173,6 @@ function Dashboard() {
             className="block mt-4 text-primary hover:underline"
           >
             View all outfits
-          </Link>
-        </section>
-
-        <section className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-2xl font-semibold mb-4">Upcoming Events</h2>
-          <ul className="space-y-2">
-            {userData?.upcomingEvents?.map((event) => (
-              <li key={event.id} className="flex justify-between items-center">
-                <span>{event.name}</span>
-                <span className="text-gray-600">{event.date}</span>
-              </li>
-            ))}
-          </ul>
-          <Link
-            href="/events"
-            className="block mt-4 text-primary hover:underline"
-          >
-            Manage events
           </Link>
         </section>
       </div>

@@ -8,6 +8,7 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { useRouter } from "next/navigation";
 import { toast, ToastContainer } from "react-toastify";
 import axios from "axios";
+import { FaUpload } from "react-icons/fa";
 
 function Onboarding() {
   const [appLoading, setAppLoading] = useState(true);
@@ -21,6 +22,7 @@ function Onboarding() {
     profileImage: null,
   });
   const [image, setImage] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const checkOnboarding = async () => {
@@ -28,7 +30,6 @@ function Onboarding() {
         try {
           const userDoc = await getDoc(doc(db, "userProfile", user.uid));
           if (userDoc.exists() && userDoc.data().onboardingCompleted) {
-            // User has already completed onboarding, redirect to profile page
             router.push("/profile");
           } else {
             setFormData((prevData) => ({
@@ -42,7 +43,6 @@ function Onboarding() {
           setAppLoading(false);
         }
       } else if (!loading) {
-        // User is not logged in, redirect to login page
         router.push("/login");
       }
     };
@@ -77,6 +77,7 @@ function Onboarding() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     const imageFormData = new FormData();
     imageFormData.append("file", image);
     imageFormData.append("name", "profile");
@@ -89,7 +90,6 @@ function Onboarding() {
           },
         });
 
-        console.log(res);
         delete formData.profileImage;
         imageUrl = res.data.downloadURL;
       }
@@ -99,8 +99,6 @@ function Onboarding() {
         userRef: user.uid,
       });
 
-      console.log(uploadToGenimi.data)
-
       if (uploadToGenimi.data.skinDetected) {
         await setDoc(doc(db, "userProfile", user.uid), {
           ...formData,
@@ -109,34 +107,41 @@ function Onboarding() {
           onboardingCompleted: true,
           skinTone: uploadToGenimi.data.skinToneDescription,
         });
+        router.push("/dashboard");
       } else {
-        throw new Error("No skin detected in the image upload another");
+        throw new Error(
+          "No skin detected in the image. Please upload another."
+        );
       }
-
-      router.push("/dashboard");
     } catch (error) {
       console.log(error);
-      return toast.error(error.message, {
+      toast.error(error.message, {
         style: {
-          fontSize: "10px",
+          fontSize: "14px",
         },
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   if (appLoading) {
-    return <div>loading...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   return (
-    <main className="flex-grow container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8 text-center">
-        Welcome to Your Personal Stylist
+    <main className="flex-grow container mx-auto px-4 py-8 bg-gradient-to-b from-blue-100 to-white min-h-screen">
+      <h1 className="text-4xl font-bold mb-8 text-center text-primary">
+        Perfect Fit 🤝 Your Partner in Personalized Style
       </h1>
 
       <form
         onSubmit={handleSubmit}
-        className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md"
+        className="max-w-md mx-auto bg-white p-8 rounded-lg shadow-lg"
       >
         <div className="mb-6">
           <label
@@ -145,18 +150,18 @@ function Onboarding() {
           >
             Upload a facial image
           </label>
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center mb-4">
             {formData.profileImage ? (
               <Image
                 src={formData.profileImage}
                 alt="Profile"
                 width={150}
                 height={150}
-                className="rounded-full object-cover"
+                className="rounded-[50%] object-cover border-4 border-primary"
               />
             ) : (
-              <div className="w-32 h-32 bg-gray-200 rounded-full flex items-center justify-center">
-                <span className="text-gray-500">No image</span>
+              <div className="w-32 h-32 bg-gray-200 rounded-full flex items-center justify-center border-4 border-dashed border-primary">
+                <FaUpload className="text-primary text-3xl" />
               </div>
             )}
           </div>
@@ -165,8 +170,14 @@ function Onboarding() {
             id="profileImage"
             accept="image/*"
             onChange={handleImageUpload}
-            className="mt-2"
+            className="hidden"
           />
+          <label
+            htmlFor="profileImage"
+            className="cursor-pointer bg-primary text-white py-2 px-4 rounded-full hover:bg-sec-2 transition-colors inline-block w-full text-center"
+          >
+            Choose Image
+          </label>
         </div>
 
         <div className="mb-4">
@@ -210,7 +221,7 @@ function Onboarding() {
           </select>
         </div>
 
-        <div className="mb-4">
+        <div className="mb-6">
           <label
             className="block text-gray-700 text-sm font-bold mb-2"
             htmlFor="age"
@@ -230,9 +241,14 @@ function Onboarding() {
 
         <button
           type="submit"
-          className="w-full bg-primary text-white font-bold py-2 px-4 rounded hover:bg-sec-2 transition-colors"
+          className={`w-full font-bold py-3 px-4 rounded-full transition-colors ${
+            isSubmitting
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-primary text-white hover:bg-sec-2"
+          }`}
+          disabled={isSubmitting}
         >
-          Start Your Style Journey
+          {isSubmitting ? "Processing..." : "Start Your Style Journey"}
         </button>
       </form>
       <ToastContainer />
